@@ -1,7 +1,20 @@
 const asyncHandler = require("express-async-handler");
 const Chat = require("../models/chatModel");
 const User = require("../models/userModel");
+// const crypto = require("crypto");
+// const algorithm = "aes-256-cbc"; 
 
+// // generate 16 bytes of random data
+// const initVector = Buffer.alloc(16, 0);
+
+// // protected data
+// const message = "This is a secret message";
+
+// // secret key generate 32 bytes of random data
+// const Securitykey = Buffer.alloc(32, 0);
+
+// // the cipher function
+// const cipher = crypto.createCipheriv(algorithm, Securitykey, initVector);
 //@description     Create or fetch One to One Chat
 //@route           POST /api/chat/
 //@access          Protected
@@ -66,6 +79,17 @@ const fetchChats = asyncHandler(async (req, res) => {
           path: "latestMessage.sender",
           select: "name pic email",
         });
+             
+        // results.forEach(message => {
+        //   if(message.latestMessage){
+        //     const decipher = crypto.createDecipheriv(algorithm, Securitykey, initVector);
+        //     let decryptedData = decipher.update(message.latestMessage.content, "hex", "utf-8");
+        //     console.log(decryptedData);
+        //     decryptedData += decipher.final("utf8");
+        //     message.latestMessage.content = decryptedData;
+        //         }
+        //   })
+
         res.status(200).send(results);
       });
   } catch (error) {

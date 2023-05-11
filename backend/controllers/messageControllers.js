@@ -2,6 +2,23 @@ const asyncHandler = require("express-async-handler");
 const Message = require("../models/messageModel");
 const User = require("../models/userModel");
 const Chat = require("../models/chatModel");
+const crypto = require("crypto");
+const algorithm = "aes-256-cbc"; 
+
+// generate 16 bytes of random data
+const initVector = Buffer.alloc(16, 0);
+
+// protected data
+const message = "This is a secret message";
+
+// secret key generate 32 bytes of random data
+const Securitykey = Buffer.alloc(32, 0);
+
+// the cipher function
+const cipher = crypto.createCipheriv(algorithm, Securitykey, initVector);
+console.log("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
+console.log(Securitykey);
+console.log(initVector);
 
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
@@ -11,8 +28,21 @@ const allMessages = asyncHandler(async (req, res) => {
     const messages = await Message.find({ chat: req.params.chatId })
       .populate("sender", "name pic email")
       .populate("chat");
+    console.log(messages);
+    messages.forEach(message => {
+          
+    // the decipher function
+    const decipher = crypto.createDecipheriv(algorithm, Securitykey, initVector);
+
+    let decryptedData = decipher.update(message.content, "hex", "utf-8");
+    console.log(decryptedData);
+    decryptedData += decipher.final("utf8");
+
+    message.content = decryptedData;
+    })  
     res.json(messages);
   } catch (error) {
+    console.log(error)
     res.status(400);
     throw new Error(error.message);
   }
@@ -28,10 +58,20 @@ const sendMessage = asyncHandler(async (req, res) => {
     console.log("Invalid data passed into request");
     return res.sendStatus(400);
   }
+  console.log(content);
+
+// encrypt the message
+// input encoding
+// output encoding
+let encryptedData = cipher.update(content, "utf-8", "hex");
+
+encryptedData += cipher.final("hex");
+
+console.log("Encrypted message: " + encryptedData);
 
   var newMessage = {
     sender: req.user._id,
-    content: content,
+    content: encryptedData,
     chat: chatId,
   };
 
@@ -46,7 +86,16 @@ const sendMessage = asyncHandler(async (req, res) => {
     });
 
     await Chat.findByIdAndUpdate(req.body.chatId, { latestMessage: message });
+            
+    // the decipher function
+    const decipher = crypto.createDecipheriv(algorithm, Securitykey, initVector);
+    console.log(message.content);
+    let decryptedData = decipher.update(message.content, "hex", "utf-8");
+    console.log(decryptedData);
+    decryptedData += decipher.final("utf8");
 
+    console.log("Decrypted message: " + decryptedData);
+    message.content = decryptedData;
     res.json(message);
   } catch (error) {
     res.status(400);
